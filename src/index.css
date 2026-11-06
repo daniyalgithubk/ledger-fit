@@ -1,8 +1,286 @@
 @import "tailwindcss";
 
-
 @theme {
   --breakpoint-mobile-s: 320px;
   --breakpoint-mobile-m: 375px;
   --breakpoint-mobile-l: 425px;
+}
+
+/* ================================
+   LEDGER/FIT GLOBAL THEME
+================================ */
+
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: #e5edf8;
+  background: #020b17;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(0, 119, 255, 0.12),
+      transparent 35%
+    ),
+    linear-gradient(180deg, #020b17 0%, #04111f 100%);
+  color: #e5edf8;
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020b17;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #16466f;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1688ff;
+}
+
+/* ================================
+   COMMON LEDGER/FIT COMPONENTS
+================================ */
+
+.lf-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(0, 132, 255, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(0, 132, 255, 0.05),
+      transparent 25%
+    );
+}
+
+.lf-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 16px 70px;
+}
+
+.lf-card {
+  border: 1px solid rgba(65, 153, 220, 0.22);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 32, 52, 0.94),
+      rgba(3, 18, 32, 0.94)
+    );
+  border-radius: 18px;
+  box-shadow:
+    0 15px 45px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.lf-card:hover {
+  border-color: rgba(0, 145, 255, 0.4);
+}
+
+.lf-section {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 24px;
+  padding: 20px;
+}
+
+.lf-title {
+  color: #f8fbff;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.lf-muted {
+  color: #8194aa;
+}
+
+.lf-blue {
+  color: #1695ff;
+}
+
+.lf-button {
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0787ff, #0065df);
+  color: white;
+  font-weight: 700;
+  transition: 0.2s ease;
+  box-shadow: 0 8px 25px rgba(0, 118, 255, 0.2);
+}
+
+.lf-button:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #1596ff, #0070ed);
+  box-shadow: 0 10px 30px rgba(0, 118, 255, 0.3);
+}
+
+.lf-choice {
+  border: 1px solid rgba(71, 139, 190, 0.2);
+  background: rgba(7, 26, 43, 0.8);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.lf-choice:hover {
+  border-color: #078cff;
+  background: rgba(8, 42, 70, 0.9);
+  transform: translateY(-2px);
+}
+
+.lf-choice-active {
+  border-color: #0794ff !important;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(0, 116, 220, 0.25),
+      rgba(0, 70, 140, 0.12)
+    ) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 145, 255, 0.25),
+    0 8px 25px rgba(0, 100, 220, 0.12);
+}
+
+.lf-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(0, 126, 255, 0.12);
+  color: #1596ff;
+}
+
+.lf-input {
+  width: 100%;
+  border: 1px solid rgba(68, 135, 183, 0.3);
+  border-radius: 12px;
+  background: rgba(3, 18, 31, 0.85);
+  color: #f4f8fc;
+  outline: none;
+}
+
+.lf-input::placeholder {
+  color: #52677c;
+}
+
+.lf-input:focus {
+  border-color: #078fff;
+  box-shadow: 0 0 0 3px rgba(0, 137, 255, 0.12);
+}
+
+/* ================================
+   NAVBAR
+================================ */
+
+.lf-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(77, 143, 193, 0.18);
+  background: rgba(2, 12, 23, 0.88);
+  backdrop-filter: blur(18px);
+}
+
+.lf-logo {
+  color: #f5f9ff;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.lf-logo::after {
+  content: "";
+  color: #0b94ff;
+}
+
+.lf-nav-link {
+  position: relative;
+  color: #8ea2b7;
+  transition: color 0.2s ease;
+}
+
+.lf-nav-link:hover {
+  color: white;
+}
+
+.lf-nav-link-active {
+  color: #1598ff;
+}
+
+.lf-nav-link-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -17px;
+  width: 22px;
+  height: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #0794ff;
+  box-shadow: 0 0 12px rgba(0, 148, 255, 0.8);
+}
+
+/* ================================
+   FOOTER
+================================ */
+
+.lf-footer {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(74, 140, 190, 0.18);
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(0, 108, 220, 0.18),
+      transparent 55%
+    ),
+    #020c18;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 640px) {
+  .lf-container {
+    padding: 28px 12px 50px;
+  }
+
+  .lf-section {
+    padding: 16px;
+    border-radius: 15px;
+  }
+
+  .lf-nav-link-active::after {
+    display: none;
+  }
 }
