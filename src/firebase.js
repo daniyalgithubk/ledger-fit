@@ -4,14 +4,14 @@ import { getFirestore } from "firebase/firestore";
 
 
 
-console.log(
-  "Firebase API key loaded:",
-  Boolean(import.meta.env.VITE_FIREBASE_API_KEY)
-);
+// console.log(
+//   "Firebase API key loaded:",
+//   Boolean(import.meta.env.VITE_FIREBASE_API_KEY)
+// );
 
 
-console.log("API key:", import.meta.env.VITE_FIREBASE_API_KEY);
-console.log("Project ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
+// console.log("API key:", import.meta.env.VITE_FIREBASE_API_KEY);
+// console.log("Project ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
 
 const app = initializeApp({
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
