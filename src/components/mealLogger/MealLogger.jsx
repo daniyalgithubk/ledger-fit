@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
+import { useAuthStore } from "../../zustand/store/useAuthStore";
 
 async function parseMeal(text) {
   const token = await auth.currentUser.getIdToken();
@@ -21,13 +22,23 @@ async function parseMeal(text) {
     },
     body: JSON.stringify({ text }),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Request failed.");
+
+  const raw = await res.text();
+  let data = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    throw new Error(`Server returned ${res.status}: ${raw.slice(0, 100)}`);
+  }
+
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
 }
 
 export default function MealLogger() {
   const dailyTarget = useFitnessStore((s) => s.calories);
+  const user = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.loading);
 
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
@@ -53,8 +64,8 @@ export default function MealLogger() {
   };
 
   useEffect(() => {
-    loadToday();
-  }, []);
+    if (user) loadToday().catch((e) => console.error(e));
+  }, [user]);
 
   const analyze = async () => {
     setLoading(true);
@@ -103,113 +114,128 @@ export default function MealLogger() {
     }
   };
 
-  return (
-  <div className="p-5 sm:p-6">
+  // Guards go after all hooks
+  if (authLoading) {
+    return <p className="p-5 text-sm text-slate-400">Loading...</p>;
+  }
 
-    {/* Header */}
-    <div className="mb-5 flex items-center justify-between">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-400">
-          AI Meal Logger
-        </p>
-        <h3 className="mt-1 text-lg font-bold text-white">
-          What did you eat?
-        </h3>
+  if (!user) {
+    return (
+      <p className="p-5 text-sm text-slate-400">
+        Please log in to use the AI meal logger.
+      </p>
+    );
+  }
+
+  return (
+    <div className="p-5 sm:p-6">
+      {/* Header */}
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-400">
+            AI Meal Logger
+          </p>
+          <h3 className="mt-1 text-lg font-bold text-white">
+            What did you eat?
+          </h3>
+        </div>
+
+        {dailyTarget && (
+          <div className="rounded-xl border border-white/5 bg-slate-900/60 px-4 py-2 text-right">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">
+              Today
+            </p>
+            <p className="text-sm font-bold text-white">
+              {todayTotal}
+              <span className="font-normal text-slate-500">
+                {" "}/ {dailyTarget} kcal
+              </span>
+            </p>
+          </div>
+        )}
       </div>
 
-      {dailyTarget && (
-        <div className="rounded-xl border border-white/5 bg-slate-900/60 px-4 py-2 text-right">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">
-            Today
-          </p>
-          <p className="text-sm font-bold text-white">
-            {todayTotal}
-            <span className="font-normal text-slate-500"> / {dailyTarget} kcal</span>
-          </p>
-        </div>
+      {/* Input */}
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="e.g. 2 eggs, toast with butter, coffee with milk"
+        maxLength={500}
+        rows={3}
+        className="w-full resize-none rounded-xl border border-white/10 bg-slate-900/60 p-4 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500/50"
+      />
+
+      <div className="mt-3 flex items-center justify-between">
+        <p className="text-[11px] text-slate-600">{text.length}/500</p>
+        <button
+          onClick={analyze}
+          disabled={loading || !text.trim()}
+          className="lf-button px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Analyzing..." : "Analyze"}
+        </button>
+      </div>
+
+      {error && (
+        <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+          {error}
+        </p>
       )}
-    </div>
 
-    {/* Input */}
-    <textarea
-      value={text}
-      onChange={(e) => setText(e.target.value)}
-      placeholder="e.g. 2 eggs, toast with butter, coffee with milk"
-      maxLength={500}
-      rows={3}
-      className="w-full resize-none rounded-xl border border-white/10 bg-slate-900/60 p-4 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500/50"
-    />
+      {/* Results */}
+      {items.length > 0 && (
+        <div className="mt-6 space-y-3">
+          {items.map((it, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-3 rounded-xl border border-white/5 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="font-semibold text-white">{it.name}</p>
+                <p className="text-xs text-slate-500">
+                  {it.quantity} · P {it.protein}g · C {it.carbs}g · F {it.fat}g
+                </p>
+              </div>
 
-    <div className="mt-3 flex items-center justify-between">
-      <p className="text-[11px] text-slate-600">{text.length}/500</p>
-      <button
-        onClick={analyze}
-        disabled={loading || !text.trim()}
-        className="lf-button px-6 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {loading ? "Analyzing..." : "Analyze"}
-      </button>
-    </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={it.calories}
+                  onChange={(e) => updateCalories(i, e.target.value)}
+                  className="w-20 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-right text-sm text-white outline-none focus:border-blue-500/50"
+                />
+                <span className="text-xs text-slate-500">kcal</span>
+                <button
+                  onClick={() => removeItem(i)}
+                  className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-400 transition hover:border-red-500/30 hover:text-red-400"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
 
-    {error && (
-      <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
-        {error}
-      </p>
-    )}
-
-    {/* Results */}
-    {items.length > 0 && (
-      <div className="mt-6 space-y-3">
-        {items.map((it, i) => (
-          <div
-            key={i}
-            className="flex flex-col gap-3 rounded-xl border border-white/5 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between"
-          >
+          <div className="flex items-center justify-between rounded-xl border border-blue-500/10 bg-blue-500/5 p-4">
             <div>
-              <p className="font-semibold text-white">{it.name}</p>
-              <p className="text-xs text-slate-500">
-                {it.quantity} · P {it.protein}g · C {it.carbs}g · F {it.fat}g
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                Total (AI estimate)
+              </p>
+              <p className="text-2xl font-bold text-white">
+                {total}{" "}
+                <span className="text-sm font-normal text-slate-500">kcal</span>
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={it.calories}
-                onChange={(e) => updateCalories(i, e.target.value)}
-                className="w-20 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-right text-sm text-white outline-none focus:border-blue-500/50"
-              />
-              <span className="text-xs text-slate-500">kcal</span>
-              <button
-                onClick={() => removeItem(i)}
-                className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-400 transition hover:border-red-500/30 hover:text-red-400"
-              >
-                Remove
-              </button>
-            </div>
+            <button
+              onClick={save}
+              disabled={saving}
+              className="lf-button px-6 py-2.5 text-sm disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save meal"}
+            </button>
           </div>
-        ))}
-
-        <div className="flex items-center justify-between rounded-xl border border-blue-500/10 bg-blue-500/5 p-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
-              Total (AI estimate)
-            </p>
-            <p className="text-2xl font-bold text-white">
-              {total} <span className="text-sm font-normal text-slate-500">kcal</span>
-            </p>
-          </div>
-
-          <button
-            onClick={save}
-            disabled={saving}
-            className="lf-button px-6 py-2.5 text-sm disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save meal"}
-          </button>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
 }

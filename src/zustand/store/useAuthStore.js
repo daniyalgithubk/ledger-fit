@@ -7,7 +7,7 @@ import {
     updateProfile,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "../../firebase"; // adjust the path
+import { auth, db } from "../../firebase";
 import { useFitnessStore } from "./useFitnessStore";
 import { startFitnessSync, stopFitnessSync } from "./fitnessSync";
 
@@ -32,16 +32,20 @@ export const authErrorMessage = (error) => {
 };
 
 export const useAuthStore = create((set, get) => ({
-    user: null,     // { uid, email, displayName, createdAt } or null
-    profile: null,  // extra data from Firestore: { age, ... } or null
-    loading: true,  // true until Firebase tells us if someone is logged in
+    user: null,
+    profile: null,
+    loading: true,
 
-    // Call once when the app starts. Firebase tells us whenever login state changes.
+    // Call once when the app starts.
     initAuth: () =>
         onAuthStateChanged(auth, async (firebaseUser) => {
             if (!firebaseUser) {
-                stoipFitnessSync();
-                useFitnessStore.getState().resetAll();
+                try {
+                    stopFitnessSync();
+                    useFitnessStore.getState().resetAll();
+                } catch (error) {
+                    console.error("Cleanup failed:", error);
+                }
                 set({ user: null, profile: null, loading: false });
                 return;
             }
@@ -51,7 +55,6 @@ export const useAuthStore = create((set, get) => ({
             } catch (error) {
                 console.error("Could not load fitness data:", error);
             }
-
 
             let profile = get().profile;
 
@@ -92,11 +95,9 @@ export const useAuthStore = create((set, get) => ({
 
     logout: async () => {
         await signOut(auth);
-        // Don't leave this user's plan and vitals for the next person
         useFitnessStore.getState().resetAll();
     },
 
-    // Save name (Firebase Auth) and age (Firestore)
     updateProfileData: async ({ name, age }) => {
         const { user } = get();
 
