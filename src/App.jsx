@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
-// import { auth } from "./firebase";
+import { auth } from "./firebase";
 
 import { useAuthStore } from "./zustand/store/useAuthStore";
 
@@ -22,7 +22,7 @@ function App() {
   const initAuth = useAuthStore((state) => state.initAuth);
 
   useEffect(() => {
-    // auth.authStateReady().then(() => console.log("firebase user:", auth.currentUser?.email));
+    auth.authStateReady().then(() => console.log("firebase user:", auth.currentUser?.email));
     const unsubscribe = initAuth();
     return unsubscribe;
   }, [initAuth]);
