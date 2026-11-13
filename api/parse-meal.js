@@ -1,5 +1,5 @@
 // Use a model name listed in your Google AI Studio (check "Get code" there).
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.8-flash";
 
 const SYSTEM = `You are a nutrition estimator. The user describes what they ate.
 Return ONLY valid JSON in this shape:
