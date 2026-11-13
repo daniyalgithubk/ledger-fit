@@ -13,6 +13,12 @@ import { useFitnessStore } from "../../zustand/store/useFitnessStore";
 import { useAuthStore } from "../../zustand/store/useAuthStore";
 
 async function parseMeal(text) {
+  await auth.authStateReady();
+
+  if (!auth.currentUser) {
+    throw new Error("You are logged out. Please log in and try again.");
+  }
+
   const token = await auth.currentUser.getIdToken();
   const res = await fetch("/api/parse-meal", {
     method: "POST",
@@ -73,10 +79,15 @@ export default function MealLogger() {
     setItems([]);
     try {
       const data = await parseMeal(text);
-      if (!data.items.length) setError("No food found. Try rephrasing.");
-      setItems(data.items);
+      const list = data.items || [];
+      if (!list.length) setError("No food found. Try rephrasing.");
+      setItems(list);
     } catch (e) {
-      setError(e.message);
+      setError(
+        /high demand|overloaded|busy|503/i.test(e.message)
+          ? "The AI is busy right now. Please try again in a moment."
+          : e.message
+      );
     } finally {
       setLoading(false);
     }
@@ -177,9 +188,18 @@ export default function MealLogger() {
       </div>
 
       {error && (
-        <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
-          {error}
-        </p>
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p className="text-sm text-red-400">{error}</p>
+          {/busy/i.test(error) && (
+            <button
+              onClick={analyze}
+              disabled={loading}
+              className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white disabled:opacity-50"
+            >
+              Try again
+            </button>
+          )}
+        </div>
       )}
 
       {/* Results */}

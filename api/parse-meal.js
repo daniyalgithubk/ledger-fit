@@ -1,5 +1,7 @@
-// Use a model name listed in your Google AI Studio (check "Get code" there).
-const MODEL = "gemini-3.8-flash";
+// Use model names listed in your Google AI Studio ("Get code").
+// The second is a fallback if the first is busy or not found.
+// Delete it if AI Studio doesn't list it.
+const MODELS = ["gemini-3.8-flash", "gemini-flash-latest"];
 
 const SYSTEM = `You are a nutrition estimator. The user describes what they ate.
 Return ONLY valid JSON in this shape:
@@ -23,6 +25,43 @@ async function verifyUser(idToken) {
   }
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Tries each model. Retries only when Gemini is busy (503) or rate limited (429).
+async function callGemini(body) {
+  let last = null;
+
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": process.env.GEMINI_API_KEY,
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const data = await r.json().catch(() => ({}));
+      if (r.ok) return { r, data };
+
+      last = { r, data };
+
+      // Model name not available: try the next model
+      if (r.status === 404) break;
+
+      // Other errors (bad key, bad request) won't fix themselves
+      if (r.status !== 503 && r.status !== 429) return last;
+
+      await sleep(1000 * (attempt + 1));
+    }
+  }
+  return last;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
@@ -37,28 +76,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM }] },
-          contents: [{ role: "user", parts: [{ text }] }],
-          generationConfig: { responseMimeType: "application/json" },
-        }),
-      }
-    );
-
-    const data = await r.json().catch(() => ({}));
+    const { r, data } = await callGemini({
+      systemInstruction: { parts: [{ text: SYSTEM }] },
+      contents: [{ role: "user", parts: [{ text }] }],
+      generationConfig: { responseMimeType: "application/json" },
+    });
 
     if (!r.ok) {
       console.error("Gemini error:", r.status, JSON.stringify(data));
-      return res.status(502).json({
-        error: data?.error?.message || `AI request failed (${r.status}).`,
+      const busy = r.status === 503 || r.status === 429;
+      return res.status(busy ? 503 : 502).json({
+        error: busy
+          ? "The AI is busy right now. Please try again in a moment."
+          : data?.error?.message || `AI request failed (${r.status}).`,
       });
     }
 
