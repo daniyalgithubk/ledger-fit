@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Dumbbell,
   HeartPulse,
+  Salad,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -269,8 +270,6 @@ const Home = () => {
         </div>
       </section>
 
-    
-
       {/* ===================================================== */}
       {/* WEEKLY LEDGER */}
       {/* ===================================================== */}
@@ -366,6 +365,37 @@ const Home = () => {
       </section>
 
       {/* ===================================================== */}
+      {/* NUTRITION TEASER */}
+      {/* ===================================================== */}
+
+      <section className="lf-container pt-0">
+        <Link
+          to="/diet"
+          className="lf-card group flex items-center justify-between gap-4 p-5 transition hover:border-blue-500/30 sm:p-6"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+              <Salad className="h-5 w-5 text-blue-400" />
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">
+                Nutrition
+              </p>
+              <p className="mt-1 font-semibold text-white">
+                Log your meals with AI
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Describe what you ate and get a calorie estimate.
+              </p>
+            </div>
+          </div>
+
+          <ArrowRight className="h-5 w-5 shrink-0 text-blue-400 transition group-hover:translate-x-1" />
+        </Link>
+      </section>
+
+      {/* ===================================================== */}
       {/* FINAL CTA */}
       {/* ===================================================== */}
 
@@ -391,39 +421,6 @@ const Home = () => {
           </button>
         </div>
       </section>
-
-      {/* ===================================================== */}
-{/* NUTRITION TEASER */}
-{/* ===================================================== */}
-
-<section className="lf-container pt-0">
-
-  <Link
-    to="/diet"
-    className="lf-card group flex items-center justify-between gap-4 p-5 transition hover:border-blue-500/30 sm:p-6"
-  >
-    <div className="flex items-center gap-4">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
-        <Salad className="h-5 w-5 text-blue-400" />
-      </div>
-
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">
-          Nutrition
-        </p>
-        <p className="mt-1 font-semibold text-white">
-          Log your meals with AI
-        </p>
-        <p className="mt-1 text-sm text-slate-500">
-          Describe what you ate and get a calorie estimate.
-        </p>
-      </div>
-    </div>
-
-    <ArrowRight className="h-5 w-5 shrink-0 text-blue-400 transition group-hover:translate-x-1" />
-  </Link>
-
-</section>
     </div>
   );
 };
