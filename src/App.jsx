@@ -17,6 +17,7 @@ import Profile from "./pages/profile/Profile";
 import MyProgress from "./pages/progress/MyProgress";
 import Settings from "./pages/settings/Settings";
 import Ledger from "./pages/ledger/Ledger";
+import Diet from "./pages/diet/Diet";
 
 function App() {
   const initAuth = useAuthStore((state) => state.initAuth);
@@ -36,6 +37,7 @@ function App() {
           <Route path="/plan" element={<Plan />} />
           <Route path="/week" element={<Week />} />
           <Route path="/zones" element={<Zones />} />
+          <Route path="/diet" element={<Diet />} />
 
           {/* Profile Pages (login required) */}
           <Route

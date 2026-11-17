@@ -10,9 +10,9 @@ import {
   LogIn,
 } from "lucide-react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../zustand/store/useAuthStore"; // adjust the path
+import { useAuthStore } from "../../zustand/store/useAuthStore"; 
 
-const navLinks = ["Plan", "Week", "Zones"];
+const navLinks = ["Plan", "Week", "Zones", "Diet"];
 
 // "Daniyal Khan" -> "DK", "daniyal" -> "D"
 const getInitials = (name) =>

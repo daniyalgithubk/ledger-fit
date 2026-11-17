@@ -12,7 +12,7 @@ import WeeklyLedger from "../components/weekilyLedger/WeeklyLedger";
 import BmiRange from "../components/bmiRange/BmiRange";
 import BmiCalculator from "../components/bmiCalculator/BmiCalculator";
 import ActivityChart from "../components/activityChart/ActivityChart";
-import MealLogger from "../components/mealLogger/MealLogger"
+import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
@@ -269,39 +269,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ===================================================== */}
-      {/* AI MEAL LOGGER */}
-      {/* ===================================================== */}
-
-      <section className="lf-container pt-0">
-        <div className="mb-8">
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-blue-400">
-            Step 03
-          </p>
-
-          <h2 className="lf-title text-2xl sm:text-3xl">
-            Log your meals with AI
-          </h2>
-
-          <p className="lf-muted mt-2 max-w-2xl text-sm leading-6">
-            Describe what you ate in plain words and get a calorie estimate.
-          </p>
-        </div>
-
-        <div
-          className="
-      lf-card
-      overflow-hidden
-      [&_h2]:!text-white
-      [&_p]:!text-slate-300
-      [&_strong]:!text-white
-      [&_textarea]:!text-white
-      [&_input]:!text-white
-    "
-        >
-          <MealLogger />
-        </div>
-      </section>
+    
 
       {/* ===================================================== */}
       {/* WEEKLY LEDGER */}
@@ -423,6 +391,39 @@ const Home = () => {
           </button>
         </div>
       </section>
+
+      {/* ===================================================== */}
+{/* NUTRITION TEASER */}
+{/* ===================================================== */}
+
+<section className="lf-container pt-0">
+
+  <Link
+    to="/diet"
+    className="lf-card group flex items-center justify-between gap-4 p-5 transition hover:border-blue-500/30 sm:p-6"
+  >
+    <div className="flex items-center gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+        <Salad className="h-5 w-5 text-blue-400" />
+      </div>
+
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">
+          Nutrition
+        </p>
+        <p className="mt-1 font-semibold text-white">
+          Log your meals with AI
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          Describe what you ate and get a calorie estimate.
+        </p>
+      </div>
+    </div>
+
+    <ArrowRight className="h-5 w-5 shrink-0 text-blue-400 transition group-hover:translate-x-1" />
+  </Link>
+
+</section>
     </div>
   );
 };
