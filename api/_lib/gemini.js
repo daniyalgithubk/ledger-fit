@@ -1,6 +1,11 @@
 export const MODELS = ["gemini-3.8-flash", "gemini-flash-latest"];
 
 export async function verifyUser(idToken) {
+  if (!process.env.FIREBASE_API_KEY) {
+    console.error("FIREBASE_API_KEY is not set");
+    return false;
+  }
+
   try {
     const r = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${process.env.FIREBASE_API_KEY}`,
@@ -10,8 +15,14 @@ export async function verifyUser(idToken) {
         body: JSON.stringify({ idToken }),
       }
     );
+
+    if (!r.ok) {
+      const body = await r.text();
+      console.error("verifyUser failed:", r.status, body);
+    }
     return r.ok;
-  } catch {
+  } catch (e) {
+    console.error("verifyUser error:", e);
     return false;
   }
 }

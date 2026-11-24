@@ -3,11 +3,11 @@ import { Salad } from "lucide-react";
 import MealLogger from "../../components/mealLogger/MealLogger";
 import VitalsCard from "../../components/diet/VitalsCard";
 import MacroProgress from "../../components/diet/MacroProgress";
-import TodayMeals from "../../components/diet/TodayMeals";
+import TodayMeals from "../../components/diet/TodayMeal";
 import DietPlan from "../../components/diet/DietPlan";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
 import { useAuthStore } from "../../zustand/store/useAuthStore";
-import { useTodayMeals } from "../../hooks/useTodayMeals";
+import { useTodayMeals } from "../../hooks/useTodayMeal";
 import { GOALS, getMacroTargets, suggestGoal } from "../../utils/macros";
 
 const GOAL_KEY = "ledger-fit-goal";

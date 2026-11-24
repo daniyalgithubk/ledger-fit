@@ -16,7 +16,7 @@ import { db } from "../firebase";
 const sum = (arr, fn) => arr.reduce((t, x) => t + (Number(fn(x)) || 0), 0);
 
 export function useTodayMeals(uid) {
-    const [meals , setmeals] = useState([]);
+   const [meals, setMeals] = useState([]);
     const [loading , setLoading] = useState(true);
     const [error , setError] = useState("");
 
