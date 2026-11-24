@@ -1,15 +1,6 @@
-import { useEffect, useState } from "react";
-import {
-  addDoc,
-  collection,
-  getDocs,
-  query,
-  serverTimestamp,
-  Timestamp,
-  where,
-} from "firebase/firestore";
+import { useState } from "react";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../../firebase";
-import { useFitnessStore } from "../../zustand/store/useFitnessStore";
 import { useAuthStore } from "../../zustand/store/useAuthStore";
 
 async function parseMeal(text) {
@@ -42,7 +33,6 @@ async function parseMeal(text) {
 }
 
 export default function MealLogger() {
-  const dailyTarget = useFitnessStore((s) => s.calories);
   const user = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.loading);
 
@@ -51,27 +41,9 @@ export default function MealLogger() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [todayTotal, setTodayTotal] = useState(0);
 
-  const total = items.reduce((sum, i) => sum + Number(i.calories || 0), 0);
-
-  const loadToday = async () => {
-    if (!auth.currentUser) return;
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const q = query(
-      collection(db, "users", auth.currentUser.uid, "meals"),
-      where("createdAt", ">=", Timestamp.fromDate(start))
-    );
-    const snap = await getDocs(q);
-    let sum = 0;
-    snap.forEach((d) => (sum += d.data().totalCalories || 0));
-    setTodayTotal(sum);
-  };
-
-  useEffect(() => {
-    if (user) loadToday().catch((e) => console.error(e));
-  }, [user]);
+  const sum = (key) => items.reduce((t, i) => t + (Number(i[key]) || 0), 0);
+  const total = sum("calories");
 
   const analyze = async () => {
     setLoading(true);
@@ -113,11 +85,13 @@ export default function MealLogger() {
         description: text,
         items,
         totalCalories: total,
+        totalProtein: sum("protein"),
+        totalCarbs: sum("carbs"),
+        totalFat: sum("fat"),
         createdAt: serverTimestamp(),
       });
       setText("");
       setItems([]);
-      await loadToday();
     } catch (e) {
       setError("Could not save: " + e.message);
     } finally {
@@ -125,7 +99,6 @@ export default function MealLogger() {
     }
   };
 
-  // Guards go after all hooks
   if (authLoading) {
     return <p className="p-5 text-sm text-slate-400">Loading...</p>;
   }
@@ -140,33 +113,13 @@ export default function MealLogger() {
 
   return (
     <div className="p-5 sm:p-6">
-      {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-400">
-            AI Meal Logger
-          </p>
-          <h3 className="mt-1 text-lg font-bold text-white">
-            What did you eat?
-          </h3>
-        </div>
-
-        {dailyTarget && (
-          <div className="rounded-xl border border-white/5 bg-slate-900/60 px-4 py-2 text-right">
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">
-              Today
-            </p>
-            <p className="text-sm font-bold text-white">
-              {todayTotal}
-              <span className="font-normal text-slate-500">
-                {" "}/ {dailyTarget} kcal
-              </span>
-            </p>
-          </div>
-        )}
+      <div className="mb-5">
+        <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-400">
+          AI Meal Logger
+        </p>
+        <h3 className="mt-1 text-lg font-bold text-white">What did you eat?</h3>
       </div>
 
-      {/* Input */}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -202,7 +155,6 @@ export default function MealLogger() {
         </div>
       )}
 
-      {/* Results */}
       {items.length > 0 && (
         <div className="mt-6 space-y-3">
           {items.map((it, i) => (
@@ -213,7 +165,7 @@ export default function MealLogger() {
               <div>
                 <p className="font-semibold text-white">{it.name}</p>
                 <p className="text-xs text-slate-500">
-                  {it.quantity} · Protein {it.protein}g · Carbs {it.carbs}g · Fat {it.fat}g
+                  {it.quantity} · P {it.protein}g · C {it.carbs}g · F {it.fat}g
                 </p>
               </div>
 
