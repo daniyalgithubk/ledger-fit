@@ -165,7 +165,7 @@ export default function MealLogger() {
               <div>
                 <p className="font-semibold text-white">{it.name}</p>
                 <p className="text-xs text-slate-500">
-                  {it.quantity} · P {it.protein}g · C {it.carbs}g · F {it.fat}g
+                  {it.quantity} · Protein {it.protein}g · Carbs {it.carbs}g · Fat {it.fat}g
                 </p>
               </div>
 
