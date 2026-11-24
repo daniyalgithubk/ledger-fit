@@ -50,7 +50,7 @@ export default function TodayMeals({ meals, loading, error, onDelete }) {
               <p className="mt-1 text-xs text-slate-500">
                 {m.totalCalories} kcal
                 {m.totalProtein != null &&
-                  ` · P ${m.totalProtein}g · C ${m.totalCarbs}g · F ${m.totalFat}g`}
+                  ` · Protein ${m.totalProtein}g · Carbs ${m.totalCarbs}g · Fat ${m.totalFat}g`}
                 {formatTime(m.createdAt) && ` · ${formatTime(m.createdAt)}`}
               </p>
             </div>
