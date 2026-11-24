@@ -1,4 +1,4 @@
-import { verifyUser, callGemini } from "./_lib/gemini.js";
+import { verifyUser, callAI } from "./_lib/ai.js";
 
 const GOALS = ["lose", "maintain", "gain"];
 const PREFERENCES = ["none", "halal", "vegetarian", "vegan"];
@@ -6,7 +6,7 @@ const CUISINES = ["any", "desi", "western", "mediterranean"];
 const CATEGORIES = ["Underweight", "Normal", "Overweight", "Obesity range"];
 
 const SYSTEM = `You are a nutrition planner. Create a one-day meal plan.
-Return ONLY valid JSON in this shape:
+Return ONLY a JSON object in this shape:
 {"meals":[{"name":"Breakfast","items":["..."],"calories":0,"protein":0,"carbs":0,"fat":0}],"tips":["..."]}
 Include breakfast, lunch, dinner and one or two snacks.
 The total calories must be within 5% of the target.
@@ -47,28 +47,18 @@ Diet preference: ${b.preference}.
 Cuisine: ${b.cuisine}.`;
 
   try {
-    const { r, data } = await callGemini({
-      systemInstruction: { parts: [{ text: SYSTEM }] },
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" },
-    });
+    const ai = await callAI(SYSTEM, prompt, 3000);
 
-    if (!r.ok) {
-      console.error("Gemini error:", r.status, JSON.stringify(data));
-      const busy = r.status === 503 || r.status === 429;
+    if (!ai.ok) {
+      const busy = ai.status === 429 || ai.status === 503;
       return res.status(busy ? 503 : 502).json({
         error: busy
           ? "The AI is busy right now. Please try again in a moment."
-          : data?.error?.message || `AI request failed (${r.status}).`,
+          : ai.error,
       });
     }
 
-    const output = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!output) {
-      return res.status(502).json({ error: "AI returned no result." });
-    }
-
-    const parsed = JSON.parse(output.replace(/```json|```/g, "").trim());
+    const parsed = JSON.parse(ai.text.replace(/```json|```/g, "").trim());
 
     const meals = (parsed.meals || [])
       .slice(0, 7)
