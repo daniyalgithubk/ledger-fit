@@ -147,7 +147,7 @@ export default function DietPlan({ bmi, category, kcal, goal }) {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="font-semibold text-white">{m.name}</p>
                 <p className="text-xs text-slate-500">
-                  {m.calories} kcal · P {m.protein}g · C {m.carbs}g · F {m.fat}g
+                  {m.calories} kcal · Protein {m.protein}g · Carbs {m.carbs}g · Fat {m.fat}g
                 </p>
               </div>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
@@ -163,7 +163,7 @@ export default function DietPlan({ bmi, category, kcal, goal }) {
               Plan total
             </p>
             <p className="mt-1 text-sm text-white">
-              {plan.totals.calories} kcal · P {plan.totals.protein}g · C {plan.totals.carbs}g · F {plan.totals.fat}g
+              {plan.totals.calories} kcal · Protein {plan.totals.protein}g · Carbs {plan.totals.carbs}g · Fat {plan.totals.fat}g
             </p>
           </div>
 
