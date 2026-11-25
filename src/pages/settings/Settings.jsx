@@ -1,332 +1,226 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
 import {
-  User,
-  Bell,
-  Dumbbell,
-  Moon,
-  Shield,
-  Ruler,
-  ChevronRight,
-  LogOut,
+  User, Bell, Dumbbell, Moon, Shield, Ruler, ChevronRight, LogOut, Check, KeyRound,
 } from "lucide-react";
+import { auth } from "../../firebase";
+import { useAuthStore } from "../../zustand/store/useAuthStore";
+import { useLocalSetting } from "../../hooks/useLocalSetting";
+import PageHeader from "../../components/ui/PageHeader";
+import SectionCard from "../../components/ui/SectionCard";
+import Reveal from "../../components/ui/Reveal";
+
+const selectClass =
+  "rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-500/60";
+
+const Row = ({ title, text, children }) => (
+  <div className="flex flex-col gap-3 rounded-xl border border-white/5 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p className="font-semibold text-white">{title}</p>
+      <p className="mt-0.5 text-sm text-slate-500">{text}</p>
+    </div>
+    {children}
+  </div>
+);
+
+const Toggle = ({ checked, onChange, label }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    aria-label={label}
+    onClick={() => onChange(!checked)}
+    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+      checked ? "bg-gradient-to-r from-blue-500 to-cyan-400" : "bg-slate-700"
+    }`}
+  >
+    <span
+      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+        checked ? "left-[22px]" : "left-0.5"
+      }`}
+    />
+  </button>
+);
 
 const Settings = () => {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  const [duration, setDuration] = useLocalSetting("duration", "45 min");
+  const [level, setLevel] = useLocalSetting("level", "Intermediate");
+  const [reminders, setReminders] = useLocalSetting("reminders", true);
+  const [updates, setUpdates] = useLocalSetting("updates", true);
+  const [units, setUnits] = useLocalSetting("units", "Metric (kg, cm)");
+
+  const [resetState, setResetState] = useState("idle"); // idle | sending | sent | error
+
+  const handleReset = async () => {
+    if (!user?.email) return;
+    setResetState("sending");
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      setResetState("sent");
+    } catch (e) {
+      console.error(e);
+      setResetState("error");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
+  };
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+      <PageHeader
+        eyebrow="Settings"
+        title="Settings"
+        text="Customize your fitness experience and account preferences"
+      />
 
-      {/* ================= HEADER ================= */}
-      <div className="mb-10 text-center">
-        <p className="mb-2 text-sm font-semibold tracking-widest text-blue-500">
-          SETTINGS
-        </p>
-
-        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          Settings
-        </h1>
-
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-gray-500 sm:text-base">
-          Customize your fitness experience and account preferences
-        </p>
-      </div>
-
-      {/* ================= ACCOUNT ================= */}
-      <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-            <User className="h-5 w-5 text-blue-500" />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Account
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Manage your account information
-            </p>
-          </div>
-        </div>
-
-        <div className="divide-y divide-gray-100">
-
-          <button className="flex w-full items-center justify-between py-4 text-left">
-            <div>
-              <p className="font-semibold text-gray-900">
-                Edit Profile
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Update your personal information
-              </p>
-            </div>
-
-            <ChevronRight className="h-5 w-5 text-gray-400" />
-          </button>
-
-          <button className="flex w-full items-center justify-between py-4 text-left">
-            <div>
-              <p className="font-semibold text-gray-900">
-                Change Password
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Update your account password
-              </p>
-            </div>
-
-            <ChevronRight className="h-5 w-5 text-gray-400" />
-          </button>
-
-        </div>
-      </div>
-
-      {/* ================= WORKOUT PREFERENCES ================= */}
-      <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-            <Dumbbell className="h-5 w-5 text-blue-500" />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Workout Preferences
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Customize how your workouts are planned
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-
-          <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
-            <div>
-              <p className="font-semibold text-gray-900">
-                Default Workout Duration
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Choose your preferred workout length
-              </p>
-            </div>
-
-            <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
-              <option>45 min</option>
-              <option>30 min</option>
-              <option>60 min</option>
-              <option>75 min</option>
-              <option>90 min</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
-            <div>
-              <p className="font-semibold text-gray-900">
-                Fitness Level
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Set your current experience level
-              </p>
-            </div>
-
-            <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
-              <option>Intermediate</option>
-              <option>Beginner</option>
-              <option>Advanced</option>
-            </select>
-          </div>
-
-        </div>
-      </div>
-
-      {/* ================= NOTIFICATIONS ================= */}
-      <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-            <Bell className="h-5 w-5 text-blue-500" />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Notifications
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Choose what notifications you receive
-            </p>
-          </div>
-        </div>
-
+      <SectionCard icon={User} title="Account" text="Manage your account information">
         <div className="space-y-3">
-
-          <label className="flex cursor-pointer items-center justify-between rounded-xl bg-gray-50 p-4">
+          <Link
+            to="/profile"
+            className="group flex items-center justify-between rounded-xl border border-white/5 bg-slate-900/60 p-4 transition hover:border-blue-500/30"
+          >
             <div>
-              <p className="font-semibold text-gray-900">
-                Workout Reminders
-              </p>
+              <p className="font-semibold text-white">Edit profile</p>
+              <p className="mt-0.5 text-sm text-slate-500">Update your name and age</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-slate-500 transition group-hover:translate-x-1 group-hover:text-blue-400" />
+          </Link>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Get reminded when it's time to workout
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={resetState === "sending" || resetState === "sent"}
+            className="group flex w-full items-center justify-between rounded-xl border border-white/5 bg-slate-900/60 p-4 text-left transition hover:border-blue-500/30 disabled:opacity-80"
+          >
+            <div>
+              <p className="flex items-center gap-2 font-semibold text-white">
+                <KeyRound className="h-4 w-4 text-slate-400" />
+                Change password
+              </p>
+              <p className="mt-0.5 text-sm text-slate-500">
+                {resetState === "sent" && <span className="text-emerald-300">Reset link sent to {user?.email}. Check your inbox.</span>}
+                {resetState === "error" && <span className="text-red-400">Could not send the email. Try again.</span>}
+                {resetState === "sending" && "Sending..."}
+                {resetState === "idle" && "We will email you a link to set a new password"}
               </p>
             </div>
-
-            <input
-              type="checkbox"
-              defaultChecked
-              className="h-5 w-5 accent-blue-500"
-            />
-          </label>
-
-          <label className="flex cursor-pointer items-center justify-between rounded-xl bg-gray-50 p-4">
-            <div>
-              <p className="font-semibold text-gray-900">
-                Progress Updates
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Receive weekly progress summaries
-              </p>
-            </div>
-
-            <input
-              type="checkbox"
-              defaultChecked
-              className="h-5 w-5 accent-blue-500"
-            />
-          </label>
-
+            {resetState === "sent" ? (
+              <Check className="h-5 w-5 text-emerald-400" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-slate-500 transition group-hover:translate-x-1 group-hover:text-blue-400" />
+            )}
+          </button>
         </div>
-      </div>
+      </SectionCard>
 
-      {/* ================= APPEARANCE ================= */}
-      <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+      <SectionCard
+        icon={Dumbbell}
+        title="Workout preferences"
+        text="Customize how your workouts are planned"
+        color="text-pink-300"
+        bg="bg-pink-500/10"
+      >
+        <div className="space-y-3">
+          <Row title="Default workout duration" text="Choose your preferred workout length">
+            <select value={duration} onChange={(e) => setDuration(e.target.value)} className={selectClass}>
+              {["30 min", "45 min", "60 min", "75 min", "90 min"].map((o) => (
+                <option key={o} className="bg-slate-900">{o}</option>
+              ))}
+            </select>
+          </Row>
 
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-            <Moon className="h-5 w-5 text-blue-500" />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Appearance
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Customize how the application looks
-            </p>
-          </div>
+          <Row title="Fitness level" text="Set your current experience level">
+            <select value={level} onChange={(e) => setLevel(e.target.value)} className={selectClass}>
+              {["Beginner", "Intermediate", "Advanced"].map((o) => (
+                <option key={o} className="bg-slate-900">{o}</option>
+              ))}
+            </select>
+          </Row>
         </div>
+      </SectionCard>
 
-        <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
+      <SectionCard
+        icon={Bell}
+        title="Notifications"
+        text="Choose what notifications you receive"
+        color="text-amber-300"
+        bg="bg-amber-400/10"
+      >
+        <div className="space-y-3">
+          <Row title="Workout reminders" text="Get reminded when it's time to workout">
+            <Toggle checked={reminders} onChange={setReminders} label="Workout reminders" />
+          </Row>
+          <Row title="Progress updates" text="Receive weekly progress summaries">
+            <Toggle checked={updates} onChange={setUpdates} label="Progress updates" />
+          </Row>
+        </div>
+      </SectionCard>
 
-          <div>
-            <p className="font-semibold text-gray-900">
-              Theme
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Select your preferred theme
-            </p>
-          </div>
-
-          <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
-            <option>Light</option>
-            <option>Dark</option>
-            <option>System</option>
+      <SectionCard
+        icon={Moon}
+        title="Appearance"
+        text="Customize how the application looks"
+        color="text-indigo-300"
+        bg="bg-indigo-500/10"
+      >
+        <Row title="Theme" text="Light and system themes are coming soon">
+          <select value="Dark" disabled className={`${selectClass} opacity-70`}>
+            <option className="bg-slate-900">Dark</option>
           </select>
+        </Row>
+      </SectionCard>
 
-        </div>
-      </div>
-
-      {/* ================= UNITS ================= */}
-      <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-            <Ruler className="h-5 w-5 text-blue-500" />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Units
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Choose how measurements are displayed
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
-
-          <div>
-            <p className="font-semibold text-gray-900">
-              Measurement System
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Weight, height and distance units
-            </p>
-          </div>
-
-          <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
-            <option>Metric (kg, cm)</option>
-            <option>Imperial (lb, ft)</option>
+      <SectionCard
+        icon={Ruler}
+        title="Units"
+        text="Choose how measurements are displayed"
+        color="text-cyan-300"
+        bg="bg-cyan-500/10"
+      >
+        <Row title="Measurement system" text="Weight, height and distance units">
+          <select value={units} onChange={(e) => setUnits(e.target.value)} className={selectClass}>
+            {["Metric (kg, cm)", "Imperial (lb, ft)"].map((o) => (
+              <option key={o} className="bg-slate-900">{o}</option>
+            ))}
           </select>
+        </Row>
+      </SectionCard>
 
-        </div>
-      </div>
+      <SectionCard
+        icon={Shield}
+        title="Privacy & security"
+        text="How your data is handled"
+        color="text-emerald-300"
+        bg="bg-emerald-500/10"
+      >
+        <p className="rounded-xl border border-white/5 bg-slate-900/60 p-4 text-sm leading-6 text-slate-400">
+          Your vitals, plans and meal logs are stored against your account and only you can read them.
+          Ledger/Fit gives general guidance and is not a medical service.
+        </p>
+      </SectionCard>
 
-      {/* ================= PRIVACY ================= */}
-      <div className="mx-auto mb-6 w-full max-w-6xl rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-            <Shield className="h-5 w-5 text-blue-500" />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Privacy & Security
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Manage your privacy and security settings
-            </p>
-          </div>
-        </div>
-
-        <button className="flex w-full items-center justify-between rounded-xl bg-gray-50 p-4 text-left">
-
-          <div>
-            <p className="font-semibold text-gray-900">
-              Privacy Settings
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Control how your fitness data is used
-            </p>
-          </div>
-
-          <ChevronRight className="h-5 w-5 text-gray-400" />
-
-        </button>
-      </div>
-
-      {/* ================= LOG OUT ================= */}
-      <div className="mx-auto w-full max-w-6xl">
-
-        <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100">
+      <Reveal className="mx-auto w-full max-w-4xl pb-6">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-3.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+        >
           <LogOut className="h-4 w-4" />
-          Log Out
+          Log out
         </button>
-
-      </div>
-
+      </Reveal>
     </div>
   );
 };
