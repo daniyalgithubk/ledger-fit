@@ -11,7 +11,7 @@ import ActivityChart from "../components/activityChart/ActivityChart";
 import Reveal from "../components/ui/Reveal";
 import AnimatedNumber from "../components/ui/AnimatedNumber";
 import { useFitnessStore } from "../zustand/store/useFitnessStore";
-import { workoutPlans } from "../data/workoutPlans";
+import workoutPlans from "../components/data/workoutPlans";
 
 const CAT_STYLE = {
   Underweight: "bg-sky-500/10 text-sky-300",

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Flame, CalendarCheck, Activity } from "lucide-react";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
-import { workoutPlans } from "../../data/workoutPlans";
+import workoutPlans from "../data/workoutPlans";
 
 const Stat = ({ icon: Icon, label, value, color }) => (
   <div className="rounded-xl border border-white/5 bg-slate-900/60 p-4">

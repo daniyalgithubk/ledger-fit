@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Moon } from "lucide-react";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
-import { workoutPlans } from "../../data/workoutPlans";
+import { workoutPlans } from "../data/workoutPlans";
 
 const ZONE = {
   Build: { chip: "bg-pink-500/10 text-pink-300 border-pink-500/20", dot: "bg-pink-400" },
