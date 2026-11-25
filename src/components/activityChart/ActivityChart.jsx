@@ -1,115 +1,88 @@
-import React from "react";
+import { motion } from "framer-motion";
+import { Flame, CalendarCheck, Activity } from "lucide-react";
+import { useFitnessStore } from "../../zustand/store/useFitnessStore";
+import { workoutPlans } from "../../data/workoutPlans";
 
-const ActivityChart = () => {
-  const points = [
-    [0, 50],
-    [13, 50],
-    [15, 18],
-    [17, 68],
-    [19, 50],
+const Stat = ({ icon: Icon, label, value, color }) => (
+  <div className="rounded-xl border border-white/5 bg-slate-900/60 p-4">
+    <Icon className={`mb-2 h-4 w-4 ${color}`} />
+    <p className="text-xs text-slate-400">{label}</p>
+    <p className="mt-1 text-xl font-extrabold tabular-nums text-white">{value}</p>
+  </div>
+);
 
-    [33, 50],
-    [35, 21],
-    [37, 65],
-    [39, 50],
+export default function ActivityChart() {
+  const category = useFitnessStore((s) => s.bmiCategory);
+  const plan = workoutPlans[category] || workoutPlans.Normal;
 
-    [54, 50],
-    [56, 15],
-    [58, 70],
-    [60, 50],
+  const data = plan.map((d) => ({
+    day: d.day,
+    name: d.workout,
+    kcal: parseInt(d.calories, 10) || 0,
+  }));
 
-    [75, 50],
-    [77, 25],
-    [79, 63],
-    [81, 50],
-
-    [100, 50],
-  ];
-
-  const days = [
-    { name: "MON", x: 4 },
-    { name: "TUE", x: 19 },
-    { name: "WED", x: 35 },
-    { name: "THU", x: 50 },
-    { name: "FRI", x: 65 },
-    { name: "SAT", x: 81 },
-    { name: "SUN", x: 96 },
-  ];
-
-  const path = points
-    .map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x} ${y}`)
-    .join(" ");
+  const max = Math.max(...data.map((d) => d.kcal), 1);
+  const total = data.reduce((t, d) => t + d.kcal, 0);
+  const active = data.filter((d) => d.kcal > 0).length;
+  const avg = active ? Math.round(total / active) : 0;
+  const today = (new Date().getDay() + 6) % 7;
 
   return (
-    <div className="w-full h-30 overflow-hidden border border-[#242529] bg-[#08090b]">
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="block h-full w-full"
-      >
-        {/* Top grid line */}
-        <line
-          x1="0"
-          y1="25"
-          x2="100"
-          y2="25"
-          stroke="#292a2e"
-          strokeWidth="0.3"
-          vectorEffect="non-scaling-stroke"
-        />
+    <div className="lf-card p-5 sm:p-6">
+      <div className="grid grid-cols-3 gap-3">
+        <Stat icon={Flame} label="Weekly burn" value={`${total.toLocaleString()} kcal`} color="text-orange-400" />
+        <Stat icon={CalendarCheck} label="Active days" value={`${active} / 7`} color="text-emerald-400" />
+        <Stat icon={Activity} label="Avg per session" value={`${avg} kcal`} color="text-blue-400" />
+      </div>
 
-        {/* Center grid line */}
-        <line
-          x1="0"
-          y1="50"
-          x2="100"
-          y2="50"
-          stroke="#292a2e"
-          strokeWidth="0.3"
-          vectorEffect="non-scaling-stroke"
-        />
+      <div className="mt-8 flex h-44 items-end gap-2 sm:gap-4">
+        {data.map((d, i) => {
+          const pct = d.kcal ? Math.max(8, (d.kcal / max) * 100) : 0;
+          const isToday = i === today;
+          return (
+            <div key={d.day} className="group flex h-full flex-1 items-end" title={`${d.name}: ${d.kcal} kcal`}>
+              {d.kcal ? (
+                <motion.div
+                  className={`relative w-full rounded-t-lg ${
+                    isToday
+                      ? "bg-gradient-to-t from-blue-500 to-cyan-400 shadow-[0_0_24px_-4px_rgba(34,211,238,0.6)]"
+                      : "bg-gradient-to-t from-blue-500/30 to-blue-400/50 group-hover:from-blue-500/50 group-hover:to-blue-400/70"
+                  }`}
+                  initial={{ height: 0 }}
+                  whileInView={{ height: `${pct}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: i * 0.07, ease: "easeOut" }}
+                >
+                  <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-slate-300">
+                    {d.kcal}
+                  </span>
+                </motion.div>
+              ) : (
+                <div className="h-1 w-full rounded-full bg-slate-700/60" />
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-        {/* Bottom grid line */}
-        <line
-          x1="0"
-          y1="75"
-          x2="100"
-          y2="75"
-          stroke="#292a2e"
-          strokeWidth="0.3"
-          vectorEffect="non-scaling-stroke"
-        />
-
-        {/* Activity line */}
-        <path
-          d={path}
-          fill="none"
-          stroke="#ff174f"
-          strokeWidth="0.22"
-          strokeLinecap="square"
-          strokeLinejoin="miter"
-          vectorEffect="non-scaling-stroke"
-        />
-
-        {/* Weekday labels */}
-        {days.map((day) => (
-          <text
-            key={day.name}
-            x={day.x}
-            y="52"
-            textAnchor="middle"
-            fill="#64666d"
-            fontSize="4"
-            fontFamily="Arial, Helvetica, sans-serif"
-            fontWeight="500"
-            letterSpacing="0.15"
+      <div className="mt-3 flex gap-2 sm:gap-4">
+        {data.map((d, i) => (
+          <div
+            key={d.day}
+            className={`flex-1 text-center text-[11px] font-semibold tracking-wider ${
+              i === today ? "text-cyan-300" : "text-slate-500"
+            }`}
           >
-            {day.name}
-          </text>
+            {d.day}
+          </div>
         ))}
-      </svg>
+      </div>
+
+      {!category && (
+        <p className="mt-5 text-xs text-slate-500">
+          Showing a general plan. Enter your vitals to personalise it.
+        </p>
+      )}
     </div>
   );
-};
-
-export default ActivityChart;
+}

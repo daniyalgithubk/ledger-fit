@@ -1,362 +1,91 @@
+import { motion } from "framer-motion";
+import { Moon } from "lucide-react";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
+import { workoutPlans } from "../../data/workoutPlans";
+
+const ZONE = {
+  Build: { chip: "bg-pink-500/10 text-pink-300 border-pink-500/20", dot: "bg-pink-400" },
+  Strength: { chip: "bg-pink-500/10 text-pink-300 border-pink-500/20", dot: "bg-pink-400" },
+  Endurance: { chip: "bg-lime-400/10 text-lime-300 border-lime-400/20", dot: "bg-lime-400" },
+  Recovery: { chip: "bg-cyan-400/10 text-cyan-300 border-cyan-400/20", dot: "bg-cyan-400" },
+};
+
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const row = {
+  hidden: { opacity: 0, x: -16 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } },
+};
 
 const WeeklyLedger = () => {
-  const workoutPlans = {
-    Normal: [
-      {
-        day: "MON",
-        sets: "4 × 8",
-        time: "55 min",
-        workout: "Upper Body",
-        zone: "Build",
-        calories: "350",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "TUE",
-        sets: "3 × 12",
-        time: "40 min",
-        workout: "Cardio",
-        zone: "Endurance",
-        calories: "280",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "WED",
-        sets: "4 × 10",
-        time: "55 min",
-        workout: "Lower Body",
-        zone: "Build",
-        calories: "400",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "THU",
-        sets: "Recovery",
-        time: "30 min",
-        workout: "Mobility",
-        zone: "Recovery",
-        calories: "120",
-        zoneColor: "text-cyan-400",
-        dotColor: "bg-cyan-400",
-      },
-      {
-        day: "FRI",
-        sets: "4 × 10",
-        time: "50 min",
-        workout: "Full Body",
-        zone: "Build",
-        calories: "380",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "SAT",
-        sets: "Zone 2",
-        time: "35 min",
-        workout: "Cycling / Jogging",
-        zone: "Endurance",
-        calories: "300",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "SUN",
-        sets: "—",
-        time: "—",
-        workout: "Rest",
-        zone: "Recovery",
-        calories: "—",
-        zoneColor: "text-gray-500",
-        dotColor: "bg-gray-500",
-      },
-    ],
-    Underweight: [
-      {
-        day: "MON",
-        sets: "3 × 10",
-        time: "40 min",
-        workout: "Full Body",
-        zone: "Strength",
-        calories: "250",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "TUE",
-        sets: "—",
-        time: "25 min",
-        workout: "Light Walking",
-        zone: "Recovery",
-        calories: "100",
-        zoneColor: "text-cyan-400",
-        dotColor: "bg-cyan-400",
-      },
-      {
-        day: "WED",
-        sets: "3 × 10",
-        time: "40 min",
-        workout: "Upper Body",
-        zone: "Strength",
-        calories: "230",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "THU",
-        sets: "—",
-        time: "—",
-        workout: "Rest",
-        zone: "Recovery",
-        calories: "—",
-        zoneColor: "text-gray-500",
-        dotColor: "bg-gray-500",
-      },
-      {
-        day: "FRI",
-        sets: "3 × 10",
-        time: "40 min",
-        workout: "Lower Body",
-        zone: "Strength",
-        calories: "260",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "SAT",
-        sets: "—",
-        time: "25 min",
-        workout: "Mobility / Walking",
-        zone: "Recovery",
-        calories: "100",
-        zoneColor: "text-cyan-400",
-        dotColor: "bg-cyan-400",
-      },
-      {
-        day: "SUN",
-        sets: "—",
-        time: "—",
-        workout: "Rest",
-        zone: "Recovery",
-        calories: "—",
-        zoneColor: "text-gray-500",
-        dotColor: "bg-gray-500",
-      },
-    ],
-    Overweight: [
-      {
-        day: "MON",
-        sets: "3 × 12",
-        time: "40 min",
-        workout: "Full Body Strength",
-        zone: "Build",
-        calories: "280",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "TUE",
-        sets: "Zone 2",
-        time: "35 min",
-        workout: "Brisk Walking",
-        zone: "Endurance",
-        calories: "220",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "WED",
-        sets: "3 × 12",
-        time: "40 min",
-        workout: "Upper Body",
-        zone: "Build",
-        calories: "260",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "THU",
-        sets: "Zone 2",
-        time: "35 min",
-        workout: "Cycling",
-        zone: "Endurance",
-        calories: "230",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "FRI",
-        sets: "3 × 12",
-        time: "40 min",
-        workout: "Lower Body",
-        zone: "Build",
-        calories: "300",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "SAT",
-        sets: "Zone 2",
-        time: "30 min",
-        workout: "Walking / Swimming",
-        zone: "Endurance",
-        calories: "200",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "SUN",
-        sets: "—",
-        time: "—",
-        workout: "Rest",
-        zone: "Recovery",
-        calories: "—",
-        zoneColor: "text-gray-500",
-        dotColor: "bg-gray-500",
-      },
-    ],
-    "Obesity range": [
-      {
-        day: "MON",
-        sets: "2–3 × 10",
-        time: "25 min",
-        workout: "Seated Strength",
-        zone: "Build",
-        calories: "150",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "TUE",
-        sets: "Easy pace",
-        time: "15–20 min",
-        workout: "Walking",
-        zone: "Endurance",
-        calories: "100",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "WED",
-        sets: "2–3 × 10",
-        time: "25 min",
-        workout: "Low-Impact Full Body",
-        zone: "Build",
-        calories: "160",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "THU",
-        sets: "Easy pace",
-        time: "15–20 min",
-        workout: "Cycling / Water Walking",
-        zone: "Endurance",
-        calories: "100",
-        zoneColor: "text-lime-400",
-        dotColor: "bg-lime-400",
-      },
-      {
-        day: "FRI",
-        sets: "2–3 × 10",
-        time: "25 min",
-        workout: "Seated Strength",
-        zone: "Build",
-        calories: "150",
-        zoneColor: "text-pink-500",
-        dotColor: "bg-pink-500",
-      },
-      {
-        day: "SAT",
-        sets: "Easy pace",
-        time: "15 min",
-        workout: "Gentle Mobility",
-        zone: "Recovery",
-        calories: "70",
-        zoneColor: "text-cyan-400",
-        dotColor: "bg-cyan-400",
-      },
-      {
-        day: "SUN",
-        sets: "—",
-        time: "—",
-        workout: "Rest",
-        zone: "Recovery",
-        calories: "—",
-        zoneColor: "text-gray-500",
-        dotColor: "bg-gray-500",
-      },
-    ],
-  };
-
-  const bmi = useFitnessStore((state) => state.bmi);
-  const bmiCategory = useFitnessStore((state) => state.bmiCategory);
-
-  const workouts = bmiCategory
-    ? workoutPlans[bmiCategory] || workoutPlans.Normal
-    : workoutPlans.Normal;
+  const bmiCategory = useFitnessStore((s) => s.bmiCategory);
+  const workouts = workoutPlans[bmiCategory] || workoutPlans.Normal;
+  const today = (new Date().getDay() + 6) % 7;
 
   return (
-    <section className="px-4 py-10">
-      <div className="mx-auto max-w-6xl">
-        {/* Heading */}
-        <p className="mb-3 text-sm tracking-widest text-gray-500">
-          WEEKLY LEDGER
+    <div className="lf-card overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 px-5 py-4">
+        <p className="text-sm font-semibold text-white">
+          {bmiCategory ? `Plan for BMI: ${bmiCategory}` : "General weekly plan"}
         </p>
+        {!bmiCategory && (
+          <p className="text-xs text-slate-500">Enter your vitals to personalise this week.</p>
+        )}
+      </div>
 
-        <h2 className="mb-10 text-4xl font-bold tracking-tight text-black">
-          SEVEN DAYS, WRITTEN FROM YOUR ZONE
-        </h2>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-40px" }}
+      >
+        {workouts.map((item, i) => {
+          const isRest = item.workout === "Rest";
+          const zone = ZONE[item.zone] || ZONE.Recovery;
+          const isToday = i === today;
 
-        {/* Table */}
-        <div className="overflow-hidden rounded-2xl border border-gray-800">
-          {workouts.map((item, index) => (
-            <div
+          return (
+            <motion.div
               key={item.day}
-              className={`grid grid-cols-3 items-center px-6 py-5 ${
-                index !== workouts.length - 1 ? "border-b border-gray-800" : ""
-              }`}
+              variants={row}
+              className={`grid grid-cols-[56px_1fr_auto] items-center gap-4 px-5 py-4 ${
+                i !== workouts.length - 1 ? "border-b border-white/5" : ""
+              } ${isToday ? "bg-blue-500/[0.07]" : ""} ${isRest ? "opacity-70" : ""}`}
             >
-              {/* Day / Sets / Time */}
               <div>
-                <p className="mb-3 text-sm font-medium text-gray-400">
+                <p className={`text-sm font-bold ${isToday ? "text-cyan-300" : "text-slate-300"}`}>
                   {item.day}
                 </p>
-
-                <p className="text-sm text-gray-400">{item.sets}</p>
-
-                <p className="mt-2 text-sm text-gray-400">{item.time}</p>
+                {isToday && (
+                  <span className="mt-1 inline-block rounded bg-cyan-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-300">
+                    Today
+                  </span>
+                )}
               </div>
 
-              {/* Workout / Zone */}
-              <div>
-                <h3 className="text-base font-medium text-black">
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 truncate font-semibold text-white">
+                  {isRest && <Moon className="h-3.5 w-3.5 shrink-0 text-slate-400" />}
                   {item.workout}
-                </h3>
-
-                <div
-                  className={`mt-3 flex items-center gap-2 text-sm ${item.zoneColor}`}
-                >
-                  <span
-                    className={`h-2 w-2 rounded-full ${item.dotColor}`}
-                  ></span>
-
-                  <span>{item.zone}</span>
-                </div>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {isRest ? "Recover and refuel" : `${item.sets} · ${item.time}`}
+                </p>
               </div>
 
-              {/* Calories */}
-              <div className="text-right">
-                <span className="text-sm text-gray-900">{item.calories}</span>
+              <div className="flex flex-col items-end gap-1.5">
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${zone.chip}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${zone.dot}`} />
+                  {item.zone}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {isRest ? "—" : <><b className="text-white">{item.calories}</b> kcal</>}
+                </span>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </div>
   );
 };
 
