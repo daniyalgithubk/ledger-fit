@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../zustand/store/useAuthStore";
+import ThemeToggle from "../ui/ThemeToggle";
 
 const navLinks = ["Plan", "Week", "Zones", "Diet"];
 
@@ -122,6 +123,11 @@ const Navbar = () => {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Theme toggle (desktop). On phones it lives in the mobile menu. */}
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
+
           <Link to="/ledger" className="lf-button px-4 py-2 text-sm">
             Start ledger
           </Link>
@@ -233,6 +239,12 @@ const Navbar = () => {
                   {link}
                 </NavLink>
               ))}
+
+              {/* Theme toggle (mobile) */}
+              <div className="mt-2 flex items-center justify-between rounded-xl px-4 py-2 text-sm font-medium text-slate-300">
+                Theme
+                <ThemeToggle />
+              </div>
 
               <div className="mt-3 border-t border-white/10 pt-3">
                 {loading ? (
