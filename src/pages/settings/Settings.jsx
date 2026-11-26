@@ -10,6 +10,7 @@ import { useSettingsStore } from "../../zustand/store/useSettingsStore";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionCard from "../../components/ui/SectionCard";
 import Reveal from "../../components/ui/Reveal";
+import PrivacyControls from "../../components/settings/PrivacyControls";
 
 const selectClass =
   "rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-500/60";
@@ -233,6 +234,8 @@ const Settings = () => {
           Your vitals, plans and meal logs are stored against your account and only you can read them.
           Ledger/Fit gives general guidance and is not a medical service.
         </p>
+
+        <PrivacyControls onDeleted={() => navigate("/login")} />
       </SectionCard>
 
       <Reveal className="mx-auto w-full max-w-4xl pb-6">
