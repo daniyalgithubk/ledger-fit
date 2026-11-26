@@ -45,6 +45,7 @@ const LIMITS = {
   calories: [1, 15000, "Calories must be between 1 and 15,000."],
 };
 
+const CM_PER_IN = 2.54;
 const SCALE_MIN = 15;
 const SCALE_MAX = 40;
 
@@ -133,6 +134,10 @@ const BmiCalculator = () => {
   const [height, setHeight] = useState(
     storedHeight ? String(toDisplayHeight(storedHeight, units)) : "",
   );
+  // Imperial height is entered as feet + inches
+  const storedTotalIn = storedHeight ? Math.round(storedHeight / CM_PER_IN) : 0;
+  const [feet, setFeet] = useState(storedHeight ? String(Math.floor(storedTotalIn / 12)) : "");
+  const [inches, setInches] = useState(storedHeight ? String(storedTotalIn % 12) : "");
   const [calories, setCalories] = useState(storedCalories ? String(storedCalories) : "");
   const [touched, setTouched] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -148,22 +153,30 @@ const BmiCalculator = () => {
   const round1 = (n) => Math.round(n * 10) / 10;
   const values = {
     weight: round1(fromDisplayWeight(Number(weight), units)),
-    height: round1(fromDisplayHeight(Number(height), units)),
+    height: round1(
+      isImperial(units)
+        ? (Number(feet) * 12 + Number(inches)) * CM_PER_IN
+        : fromDisplayHeight(Number(height), units),
+    ),
     calories: Number(calories),
   };
 
   const errors = {};
   for (const key of Object.keys(LIMITS)) {
     const [min, max, msg] = LIMITS[key];
-    const raw = key === "weight" ? weight : key === "height" ? height : calories;
+    const heightRaw = isImperial(units) ? feet : height;
+    const raw = key === "weight" ? weight : key === "height" ? heightRaw : calories;
     const v = values[key];
     if (!raw.trim() || !Number.isFinite(v) || v < min || v > max) errors[key] = msg;
+  }
+  if (isImperial(units) && (Number(inches) < 0 || Number(inches) >= 12)) {
+    errors.inches = "Inches must be between 0 and 11.";
   }
   const showError = (key) => (touched && errors[key] ? errors[key] : "");
 
   // Live preview while typing; falls back to the saved values from the store
   const liveBmi =
-    !errors.weight && !errors.height
+    !errors.weight && !errors.height && !errors.inches
       ? Math.round((values.weight / Math.pow(values.height / 100, 2)) * 10) / 10
       : null;
   const liveBand = liveBmi ? BANDS.find((b) => liveBmi < b.max) : null;
@@ -218,9 +231,21 @@ const BmiCalculator = () => {
                 <Field id="weight" label="Weight" icon={Scale} unit={weightUnit(units)}
                   placeholder={isImperial(units) ? "e.g. 165" : "e.g. 75"}
                   value={weight} onChange={edit(setWeight)} error={showError("weight")} />
-                <Field id="height" label="Height" icon={Ruler} unit={heightUnit(units)}
-                  placeholder={isImperial(units) ? "e.g. 69" : "e.g. 175"}
-                  value={height} onChange={edit(setHeight)} error={showError("height")} />
+                {isImperial(units) ? (
+                  <div>
+                    <p className="mb-1.5 text-sm font-medium text-slate-300">Height</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field id="feet" label="Feet" icon={Ruler} unit="ft" placeholder="e.g. 5"
+                        value={feet} onChange={edit(setFeet)} error={showError("height")} />
+                      <Field id="inches" label="Inches" icon={Ruler} unit="in" placeholder="e.g. 9"
+                        value={inches} onChange={edit(setInches)} error={showError("inches")} />
+                    </div>
+                  </div>
+                ) : (
+                  <Field id="height" label="Height" icon={Ruler} unit={heightUnit(units)}
+                    placeholder="e.g. 175"
+                    value={height} onChange={edit(setHeight)} error={showError("height")} />
+                )}
                 <Field id="calories" label="Daily calorie intake" icon={Flame} unit="kcal" placeholder="e.g. 2400"
                   value={calories} onChange={edit(setCalories)} error={showError("calories")} />
               </div>
