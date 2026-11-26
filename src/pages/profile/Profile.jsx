@@ -1,6 +1,19 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Mail, User, Target, Trophy, Edit3, LogOut, Lock, Check } from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Mail,
+  User,
+  Target,
+  Trophy,
+  Edit3,
+  LogOut,
+  Lock,
+  Check,
+  ArrowRight,
+} from "lucide-react";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 import { useAuthStore } from "../../zustand/store/useAuthStore";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
 import PageHeader from "../../components/ui/PageHeader";
@@ -26,13 +39,22 @@ const Profile = () => {
   const plan = useFitnessStore((s) => s.plan);
   const height = useFitnessStore((s) => s.height);
   const weight = useFitnessStore((s) => s.weight);
-  const workoutHistory = useFitnessStore((s) => s.workoutHistory);
+  const workoutHistory = useFitnessStore((s) => s.workoutHistory) || [];
 
+  // Edit form
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Goals and achievements
+  const [goalSaving, setGoalSaving] = useState(null);
+  const [goalError, setGoalError] = useState("");
+  const [openBadge, setOpenBadge] = useState(null);
+
+  // A goal chosen here wins. Otherwise fall back to the goal from the plan page.
+  const activeGoal = profile?.goal || plan?.goal;
 
   const startEditing = () => {
     setName(user.displayName ?? "");
@@ -49,7 +71,10 @@ const Profile = () => {
       setError("Name can't be empty.");
       return;
     }
-    if (ageValue !== null && (!Number.isFinite(ageValue) || ageValue < 10 || ageValue > 100)) {
+    if (
+      ageValue !== null &&
+      (!Number.isFinite(ageValue) || ageValue < 10 || ageValue > 100)
+    ) {
       setError("Enter an age between 10 and 100.");
       return;
     }
@@ -66,6 +91,22 @@ const Profile = () => {
     }
   };
 
+  const chooseGoal = async (title) => {
+    if (title === activeGoal || goalSaving) return;
+    setGoalSaving(title);
+    setGoalError("");
+    try {
+      await setDoc(doc(db, "users", user.uid), { goal: title }, { merge: true });
+      useAuthStore.setState((s) => ({ profile: { ...s.profile, goal: title } }));
+    } catch (e) {
+      console.error(e);
+      setGoalError("Could not save your goal. Please try again.");
+    } finally {
+      setGoalSaving(null);
+    }
+  };
+
+  // ---------- Derived values ----------
   const displayName = user.displayName || user.email.split("@")[0];
   const initial = displayName.charAt(0).toUpperCase();
   const memberSince = new Date(user.createdAt).toLocaleDateString("en-US", {
@@ -88,6 +129,8 @@ const Profile = () => {
     { label: "Member since", value: memberSince },
   ];
 
+  const openAchievement = achievements.find((a) => a.title === openBadge);
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <PageHeader
@@ -96,7 +139,7 @@ const Profile = () => {
         text="Manage your personal information and fitness goals"
       />
 
-      {/* Profile card */}
+      {/* ================= PROFILE CARD ================= */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -109,24 +152,51 @@ const Profile = () => {
           {isEditing ? (
             <form onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="edit-name" className="mb-2 block text-sm font-semibold text-slate-300">Name</label>
-                <input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+                <label htmlFor="edit-name" className="mb-2 block text-sm font-semibold text-slate-300">
+                  Name
+                </label>
+                <input
+                  id="edit-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={inputClass}
+                />
               </div>
 
               <div>
-                <label htmlFor="edit-age" className="mb-2 block text-sm font-semibold text-slate-300">Age</label>
-                <input id="edit-age" type="number" min="10" max="100" value={age} onChange={(e) => setAge(e.target.value)} className={inputClass} />
+                <label htmlFor="edit-age" className="mb-2 block text-sm font-semibold text-slate-300">
+                  Age
+                </label>
+                <input
+                  id="edit-age"
+                  type="number"
+                  min="10"
+                  max="100"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className={inputClass}
+                />
               </div>
 
               {error && (
-                <p role="alert" className="text-sm text-red-400 sm:col-span-2">{error}</p>
+                <p role="alert" className="text-sm text-red-400 sm:col-span-2">
+                  {error}
+                </p>
               )}
 
               <div className="flex gap-3 sm:col-span-2">
-                <button type="submit" disabled={saving} className="lf-button px-5 py-3 text-sm disabled:opacity-50">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="lf-button px-5 py-3 text-sm disabled:opacity-50"
+                >
                   {saving ? "Saving..." : "Save changes"}
                 </button>
-                <button type="button" onClick={() => setIsEditing(false)} className="lf-ghost px-5 py-3 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="lf-ghost px-5 py-3 text-sm"
+                >
                   Cancel
                 </button>
               </div>
@@ -169,7 +239,7 @@ const Profile = () => {
         </div>
       </motion.div>
 
-      {/* Personal info */}
+      {/* ================= PERSONAL INFORMATION ================= */}
       <SectionCard
         icon={User}
         title="Personal information"
@@ -179,7 +249,11 @@ const Profile = () => {
           {info.map((item) => (
             <div key={item.label} className="rounded-xl border border-white/5 bg-slate-900/60 p-4">
               <p className="text-xs font-medium text-slate-500">{item.label}</p>
-              <p className={`mt-1 text-lg font-bold ${item.value === "Not set" ? "text-slate-500" : "text-white"}`}>
+              <p
+                className={`mt-1 text-lg font-bold ${
+                  item.value === "Not set" ? "text-slate-500" : "text-white"
+                }`}
+              >
                 {item.value}
               </p>
             </div>
@@ -187,38 +261,67 @@ const Profile = () => {
         </div>
       </SectionCard>
 
-      {/* Goals */}
+      {/* ================= FITNESS GOALS ================= */}
       <SectionCard
         icon={Target}
         title="Fitness goals"
-        text={plan ? "Your active goal is highlighted" : "Create a plan to set your goal"}
+        text="Tap a goal to make it your active goal"
         color="text-orange-400"
         bg="bg-orange-500/10"
       >
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {GOALS.map((goal) => {
-            const active = plan?.goal === goal.title;
+            const active = activeGoal === goal.title;
+            const savingThis = goalSaving === goal.title;
             return (
-              <div
+              <motion.button
                 key={goal.title}
-                className={`rounded-xl border p-5 transition ${
+                type="button"
+                onClick={() => chooseGoal(goal.title)}
+                aria-pressed={active}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                className={`rounded-xl border p-5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 ${
                   active
-                    ? "border-blue-500/50 bg-blue-500/10 shadow-[0_0_30px_-12px_rgba(59,130,246,0.8)]"
-                    : "border-white/5 bg-slate-900/50 opacity-70"
+                    ? "border-blue-500/60 bg-blue-500/10 shadow-[0_0_30px_-12px_rgba(59,130,246,0.8)]"
+                    : "border-white/10 bg-slate-900/50 hover:border-blue-500/30 hover:bg-slate-900/80"
                 }`}
               >
                 <div className="text-2xl">{goal.icon}</div>
                 <h3 className="mt-3 font-semibold text-white">{goal.title}</h3>
-                <p className={`mt-1 flex items-center gap-1 text-xs ${active ? "text-cyan-300" : "text-slate-500"}`}>
-                  {active ? (<><Check className="h-3 w-3" /> Active goal</>) : "Available"}
+                <p
+                  className={`mt-1 flex items-center gap-1 text-xs ${
+                    active ? "text-cyan-300" : "text-slate-500"
+                  }`}
+                >
+                  {savingThis ? (
+                    "Saving..."
+                  ) : active ? (
+                    <>
+                      <Check className="h-3 w-3" /> Active goal
+                    </>
+                  ) : (
+                    "Tap to select"
+                  )}
                 </p>
-              </div>
+              </motion.button>
             );
           })}
         </div>
+
+        {goalError && <p className="mt-4 text-sm text-red-400">{goalError}</p>}
+
+        {!plan && (
+          <p className="mt-4 text-xs text-slate-500">
+            Want a workout schedule for this goal?{" "}
+            <Link to="/plan" className="font-semibold text-blue-400 hover:text-blue-300">
+              Create your plan
+            </Link>
+          </p>
+        )}
       </SectionCard>
 
-      {/* Achievements */}
+      {/* ================= ACHIEVEMENTS ================= */}
       <SectionCard
         icon={Trophy}
         title="Achievements"
@@ -229,17 +332,29 @@ const Profile = () => {
         <div className="grid gap-3 sm:grid-cols-3">
           {achievements.map((a) => {
             const pct = Math.min(100, (finishedCount / a.target) * 100);
+            const selected = openBadge === a.title;
             return (
-              <div
+              <motion.button
                 key={a.title}
-                className={`rounded-xl border p-5 ${
-                  a.unlocked ? "border-amber-400/30 bg-amber-400/[0.07]" : "border-white/5 bg-slate-900/50"
+                type="button"
+                onClick={() => setOpenBadge(selected ? null : a.title)}
+                aria-expanded={selected}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                className={`rounded-xl border p-5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-400/20 ${
+                  selected
+                    ? "border-amber-400/60 bg-amber-400/10"
+                    : a.unlocked
+                    ? "border-amber-400/30 bg-amber-400/[0.07] hover:border-amber-400/50"
+                    : "border-white/10 bg-slate-900/50 hover:border-white/20"
                 }`}
               >
                 <div className="text-2xl">
-                  {a.unlocked ? a.icon : <Lock className="h-6 w-6 text-slate-600" />}
+                  {a.unlocked ? a.icon : <Lock className="h-6 w-6 text-slate-500" />}
                 </div>
-                <h3 className={`mt-3 font-semibold ${a.unlocked ? "text-white" : "text-slate-400"}`}>{a.title}</h3>
+                <h3 className={`mt-3 font-semibold ${a.unlocked ? "text-white" : "text-slate-300"}`}>
+                  {a.title}
+                </h3>
                 <p className="mt-1 text-sm text-slate-500">{a.description}</p>
 
                 <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-800">
@@ -254,10 +369,38 @@ const Profile = () => {
                 <p className="mt-1.5 text-[11px] text-slate-500">
                   {Math.min(finishedCount, a.target)} / {a.target}
                 </p>
-              </div>
+              </motion.button>
             );
           })}
         </div>
+
+        <AnimatePresence>
+          {openAchievement && (
+            <motion.div
+              key={openAchievement.title}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-300">
+                  {openAchievement.unlocked
+                    ? `Unlocked. You have completed ${finishedCount} workouts.`
+                    : (() => {
+                        const left = Math.max(0, openAchievement.target - finishedCount);
+                        return `${left} more workout${left === 1 ? "" : "s"} to unlock "${openAchievement.title}".`;
+                      })()}
+                </p>
+                {!openAchievement.unlocked && (
+                  <Link to="/week" className="lf-button px-4 py-2 text-xs">
+                    Go to my week <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </SectionCard>
     </div>
   );
