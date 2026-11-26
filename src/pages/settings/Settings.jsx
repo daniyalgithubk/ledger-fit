@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { auth } from "../../firebase";
 import { useAuthStore } from "../../zustand/store/useAuthStore";
-import { useLocalSetting } from "../../hooks/useLocalSetting";
+import { useSettingsStore } from "../../zustand/store/useSettingsStore";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionCard from "../../components/ui/SectionCard";
 import Reveal from "../../components/ui/Reveal";
@@ -43,16 +43,16 @@ const Toggle = ({ checked, onChange, label }) => (
   </button>
 );
 
+const THEMES = [["dark", "Dark"], ["light", "Light"], ["system", "System"]];
+const UNITS = [["metric", "Metric (kg, cm)"], ["imperial", "Imperial (lb, ft)"]];
+
 const Settings = () => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
-  const [duration, setDuration] = useLocalSetting("duration", "45 min");
-  const [level, setLevel] = useLocalSetting("level", "Intermediate");
-  const [reminders, setReminders] = useLocalSetting("reminders", true);
-  const [updates, setUpdates] = useLocalSetting("updates", true);
-  const [units, setUnits] = useLocalSetting("units", "Metric (kg, cm)");
+  const { theme, units, duration, level, reminders, updates, update } =
+    useSettingsStore();
 
   const [resetState, setResetState] = useState("idle"); // idle | sending | sent | error
 
@@ -110,8 +110,14 @@ const Settings = () => {
                 Change password
               </p>
               <p className="mt-0.5 text-sm text-slate-500">
-                {resetState === "sent" && <span className="text-emerald-300">Reset link sent to {user?.email}. Check your inbox.</span>}
-                {resetState === "error" && <span className="text-red-400">Could not send the email. Try again.</span>}
+                {resetState === "sent" && (
+                  <span className="text-emerald-300">
+                    Reset link sent to {user?.email}. Check your inbox.
+                  </span>
+                )}
+                {resetState === "error" && (
+                  <span className="text-red-400">Could not send the email. Try again.</span>
+                )}
                 {resetState === "sending" && "Sending..."}
                 {resetState === "idle" && "We will email you a link to set a new password"}
               </p>
@@ -134,7 +140,11 @@ const Settings = () => {
       >
         <div className="space-y-3">
           <Row title="Default workout duration" text="Choose your preferred workout length">
-            <select value={duration} onChange={(e) => setDuration(e.target.value)} className={selectClass}>
+            <select
+              value={duration}
+              onChange={(e) => update({ duration: e.target.value })}
+              className={selectClass}
+            >
               {["30 min", "45 min", "60 min", "75 min", "90 min"].map((o) => (
                 <option key={o} className="bg-slate-900">{o}</option>
               ))}
@@ -142,7 +152,11 @@ const Settings = () => {
           </Row>
 
           <Row title="Fitness level" text="Set your current experience level">
-            <select value={level} onChange={(e) => setLevel(e.target.value)} className={selectClass}>
+            <select
+              value={level}
+              onChange={(e) => update({ level: e.target.value })}
+              className={selectClass}
+            >
               {["Beginner", "Intermediate", "Advanced"].map((o) => (
                 <option key={o} className="bg-slate-900">{o}</option>
               ))}
@@ -160,10 +174,10 @@ const Settings = () => {
       >
         <div className="space-y-3">
           <Row title="Workout reminders" text="Get reminded when it's time to workout">
-            <Toggle checked={reminders} onChange={setReminders} label="Workout reminders" />
+            <Toggle checked={reminders} onChange={(v) => update({ reminders: v })} label="Workout reminders" />
           </Row>
           <Row title="Progress updates" text="Receive weekly progress summaries">
-            <Toggle checked={updates} onChange={setUpdates} label="Progress updates" />
+            <Toggle checked={updates} onChange={(v) => update({ updates: v })} label="Progress updates" />
           </Row>
         </div>
       </SectionCard>
@@ -175,9 +189,15 @@ const Settings = () => {
         color="text-indigo-300"
         bg="bg-indigo-500/10"
       >
-        <Row title="Theme" text="Light and system themes are coming soon">
-          <select value="Dark" disabled className={`${selectClass} opacity-70`}>
-            <option className="bg-slate-900">Dark</option>
+        <Row title="Theme" text="System follows your device setting">
+          <select
+            value={theme}
+            onChange={(e) => update({ theme: e.target.value })}
+            className={selectClass}
+          >
+            {THEMES.map(([v, l]) => (
+              <option key={v} value={v} className="bg-slate-900">{l}</option>
+            ))}
           </select>
         </Row>
       </SectionCard>
@@ -189,10 +209,14 @@ const Settings = () => {
         color="text-cyan-300"
         bg="bg-cyan-500/10"
       >
-        <Row title="Measurement system" text="Weight, height and distance units">
-          <select value={units} onChange={(e) => setUnits(e.target.value)} className={selectClass}>
-            {["Metric (kg, cm)", "Imperial (lb, ft)"].map((o) => (
-              <option key={o} className="bg-slate-900">{o}</option>
+        <Row title="Measurement system" text="Weight and height units across the app">
+          <select
+            value={units}
+            onChange={(e) => update({ units: e.target.value })}
+            className={selectClass}
+          >
+            {UNITS.map(([v, l]) => (
+              <option key={v} value={v} className="bg-slate-900">{l}</option>
             ))}
           </select>
         </Row>

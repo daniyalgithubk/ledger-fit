@@ -362,3 +362,17 @@ body {
   animation: lf-shimmer 1.4s infinite;
 }
 @media (prefers-reduced-motion: reduce) { .lf-skeleton { animation: none; } }
+
+
+
+/* ===== Light theme ===== */
+html[data-theme="light"] {
+  filter: invert(1) hue-rotate(180deg);
+  background: #fff;
+}
+/* Keep images and media in their real colors */
+html[data-theme="light"] img,
+html[data-theme="light"] video,
+html[data-theme="light"] canvas {
+  filter: invert(1) hue-rotate(180deg);
+}

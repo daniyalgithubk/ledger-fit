@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Scale, Ruler, Flame, Check, ArrowRight } from "lucide-react";
 import { useFitnessStore } from "../../zustand/store/useFitnessStore";
+import { useSettingsStore } from "../../zustand/store/useSettingsStore";
+import {
+  toDisplayWeight,
+  toDisplayHeight,
+  fromDisplayWeight,
+  fromDisplayHeight,
+  weightUnit,
+  heightUnit,
+  isImperial,
+} from "../../utils/units";
 
 const ZONES = {
   Underweight: {
@@ -30,8 +40,8 @@ const BANDS = [
 ];
 
 const LIMITS = {
-  weight: [20, 500, "Weight must be between 20 and 500 kg."],
-  height: [50, 300, "Height must be between 50 and 300 cm."],
+  weight: [20, 500, "Enter a realistic weight."],
+  height: [50, 300, "Enter a realistic height."],
   calories: [1, 15000, "Calories must be between 1 and 15,000."],
 };
 
@@ -114,10 +124,15 @@ const BmiCalculator = () => {
   const storedWeight = useFitnessStore((state) => state.weight);
   const storedHeight = useFitnessStore((state) => state.height);
   const storedCalories = useFitnessStore((state) => state.calories);
+  const units = useSettingsStore((state) => state.units);
 
-  // Form inputs only (start from persisted values)
-  const [weight, setWeight] = useState(storedWeight ? String(storedWeight) : "");
-  const [height, setHeight] = useState(storedHeight ? String(storedHeight) : "");
+  // Form inputs only (start from persisted values, shown in the chosen units)
+  const [weight, setWeight] = useState(
+    storedWeight ? String(toDisplayWeight(storedWeight, units)) : "",
+  );
+  const [height, setHeight] = useState(
+    storedHeight ? String(toDisplayHeight(storedHeight, units)) : "",
+  );
   const [calories, setCalories] = useState(storedCalories ? String(storedCalories) : "");
   const [touched, setTouched] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -129,9 +144,11 @@ const BmiCalculator = () => {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Everything below (validation, BMI, saving) works in metric
+  const round1 = (n) => Math.round(n * 10) / 10;
   const values = {
-    weight: Number(weight),
-    height: Number(height),
+    weight: round1(fromDisplayWeight(Number(weight), units)),
+    height: round1(fromDisplayHeight(Number(height), units)),
     calories: Number(calories),
   };
 
@@ -198,9 +215,11 @@ const BmiCalculator = () => {
               </p>
 
               <div className="mt-6 space-y-5">
-                <Field id="weight" label="Weight" icon={Scale} unit="kg" placeholder="e.g. 75"
+                <Field id="weight" label="Weight" icon={Scale} unit={weightUnit(units)}
+                  placeholder={isImperial(units) ? "e.g. 165" : "e.g. 75"}
                   value={weight} onChange={edit(setWeight)} error={showError("weight")} />
-                <Field id="height" label="Height" icon={Ruler} unit="cm" placeholder="e.g. 175"
+                <Field id="height" label="Height" icon={Ruler} unit={heightUnit(units)}
+                  placeholder={isImperial(units) ? "e.g. 69" : "e.g. 175"}
                   value={height} onChange={edit(setHeight)} error={showError("height")} />
                 <Field id="calories" label="Daily calorie intake" icon={Flame} unit="kcal" placeholder="e.g. 2400"
                   value={calories} onChange={edit(setCalories)} error={showError("calories")} />
